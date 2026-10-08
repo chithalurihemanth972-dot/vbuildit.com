@@ -25,18 +25,24 @@ export const IdeaForm: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      // 1) Own SMTP backend (owner-only mail to vbuildit8@gmail.com, no auto-reply)
+      // 1) Own SMTP: same-origin first (Vercel), then local backend (dev).
+      // Owner-only mail to vbuildit8@gmail.com, no auto-reply.
       let ok = false;
-      try {
-        const res = await fetch('http://localhost:3001/api/idea', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
-        });
-        const data = await res.json().catch(() => ({}));
-        ok = res.ok && data.ok === true;
-      } catch {
-        ok = false;
+      for (const url of ['/api/idea', 'http://localhost:3001/api/idea']) {
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(form),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data.ok === true) {
+            ok = true;
+            break;
+          }
+        } catch {
+          // try next endpoint
+        }
       }
       // 2) Fallback: FormSubmit to owner only (no _autoresponse)
       if (!ok) {

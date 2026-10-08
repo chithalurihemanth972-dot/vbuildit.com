@@ -41,22 +41,32 @@ export const submitLead = async (payload: LeadPayload) => {
     // ignore storage errors
   }
 
-  // 1) Try own SMTP backend first (http://localhost:3001)
+  // 1) Try SMTP: same-origin /api first (works on Vercel deployment),
+  //    then local backend http://localhost:3001 (works in local dev).
   // Backend sends: (a) full details to vbuildit8@gmail.com
   //                (b) auto-reply "Hi Name, This is VBuildIt team..." to customer
-  let smtpOk = false;
-  try {
-    const res = await fetch('http://localhost:3001/api/lead', {
+  const postLead = async (url: string) => {
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
     const data = await res.json().catch(() => ({}));
-    smtpOk = res.ok && data.ok === true;
-    if (!smtpOk) console.warn('SMTP backend failed, fallback to FormSubmit:', data);
-  } catch (err) {
-    console.warn('SMTP backend not reachable, fallback to FormSubmit:', err);
+    return res.ok && data.ok === true;
+  };
+
+  let smtpOk = false;
+  for (const url of ['/api/lead', 'http://localhost:3001/api/lead']) {
+    try {
+      if (await postLead(url)) {
+        smtpOk = true;
+        break;
+      }
+    } catch {
+      // try next endpoint
+    }
   }
+  if (!smtpOk) console.warn('SMTP endpoints failed, fallback to FormSubmit');
 
   // 2) Fallback: FormSubmit (free, no backend needed) — same 2 mails
   if (!smtpOk) {
