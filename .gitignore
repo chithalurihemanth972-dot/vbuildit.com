@@ -9,3 +9,5 @@ backend/.env
 # build
 dist/
 *.local
+.vercel
+.env*

@@ -1,11 +1,11 @@
 // Vercel serverless: POST /api/idea (owner ONLY, no auto-reply)
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
 const OWNER_EMAIL = process.env.OWNER_EMAIL || 'vbuildit8@gmail.com';
 const SMTP_USER = process.env.SMTP_USER || 'vbuildit8@gmail.com';
 const SMTP_PASS = process.env.SMTP_PASS || '';
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ ok: false, error: 'POST only' });
   }
@@ -41,4 +41,4 @@ module.exports = async (req, res) => {
     console.error('Idea send failed:', err);
     return res.status(500).json({ ok: false, error: String((err && err.message) || err) });
   }
-};
+}
