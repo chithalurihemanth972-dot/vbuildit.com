@@ -1,0 +1,11 @@
+# deps
+node_modules/
+backend/node_modules/
+
+# secrets — NEVER push real passwords
+backend/.env
+.env
+
+# build
+dist/
+*.local
